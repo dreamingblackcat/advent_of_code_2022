@@ -1,18 +1,18 @@
 import * as jest from 'jest';
-import { duplicateFinder, scoreItemPriority, calculateScore, calculateTotalScore } from '../rucksack_reorg';
+import { duplicateItemFinder, scoreItemPriority, calculateScore, calculateTotalScore, badgeScoreFinder } from '../rucksack_reorg';
 
 describe('Rusack Reorg', () => {
 
-  describe('duplicateFinder', () => {
+  describe('duplicateItemFinder', () => {
     it("returns undefined if no duplicate between compartments.", () => {
       var itemList = "abcdef";
-      const dup = duplicateFinder(itemList);
+      const dup = duplicateItemFinder(itemList);
       expect(dup).toBeUndefined();
     })
 
     it("returns correct duplicate item when input is sound.", () => {
       var itemList = "abcdec";
-      const dup = duplicateFinder(itemList);
+      const dup = duplicateItemFinder(itemList);
       expect(dup).toEqual('c');
     })
 
@@ -51,6 +51,21 @@ describe('Rusack Reorg', () => {
       ]
 
       expect(calculateTotalScore(lines)).toEqual(157);
+    })
+  })
+
+  describe("badgeScoreFinder", () => {
+    it("satisfies part 2 example.", () => {
+      let lines = [
+        "vJrwpWtwJgWrhcsFMMfFFhFp",
+        "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
+        "PmmdzqPrVvPwwTWBwg",
+        "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
+        "ttgJtRGJQctTZtZT",
+        "CrZsJsPPZsGzwwsLwLmpwMDw",
+      ];
+
+      expect(badgeScoreFinder(lines)).toEqual(70);
     })
   })
 

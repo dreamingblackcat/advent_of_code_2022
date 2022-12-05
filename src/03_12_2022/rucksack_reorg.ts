@@ -3,10 +3,34 @@ import _ from 'lodash';
 import pipe from 'lodash/fp/pipe';
 import map from 'lodash/fp/map';
 import sum from 'lodash/fp/sum';
+import last from 'lodash/fp/last';
+import all from 'lodash/fp/all';
+import chunk from 'lodash/fp/chunk';
 
-type PriorityConfig = { [key: string]: number };
+type FrequencyTable = { [key: string]: number };
+type PriorityConfig = FrequencyTable;
 
-export const duplicateFinder = (itemList: string) => {
+export const findDupsFromList = (lists: Array<Array<string>>): string | undefined => {
+  const buildDictionary = (list: Array<string>): FrequencyTable => {
+    let i = 0;
+    let leftItems: {[key: string]: number } = {};
+    while (i < list.length) {
+      let char = list[i];
+      leftItems[char] = 1;
+      i += 1;
+    }
+
+    return leftItems;
+  }
+
+  const dictionaries: Array<FrequencyTable> = map(buildDictionary)(lists);
+  return last(
+      Object.keys(last(dictionaries) as object)
+            .filter((char) => all((dic) => !!dic[char], dictionaries))
+    );
+}
+
+export const duplicateItemFinder = (itemList: string) => {
   let total: number = itemList.length;
   if ((total % 2) != 0) {
     throw new Error(`Invalid rucksack. Odd number of items.`)
@@ -17,27 +41,7 @@ export const duplicateFinder = (itemList: string) => {
   let half: number = total / 2;
   let left: Array<string> = items.slice(0, half);
   let right: Array<string> = items.slice(half)
-
-  let i = 0;
-  let leftItems: {[key: string]: number } = {};
-  while (i < left.length) {
-    let char = left[i];
-    leftItems[char] = 1;
-    i += 1;
-  }
-
-  let dup = undefined;
-  i = 0
-  while (i < right.length) {
-    let char = right[i];
-    if (leftItems[char]) {
-      dup = char;
-      break;
-    }
-    i += 1;
-  }
-
-  return dup;
+  return findDupsFromList([left, right]);
 }
 
 const LowerCasePriorityConfig: PriorityConfig = _.range(1, 27).reduce((hash, i) => {
@@ -58,16 +62,32 @@ export const scoreItemPriority: (item: string) => number = (item: string): numbe
 }
 
 export const calculateScore = (line: string): number => {
-  return pipe(duplicateFinder, scoreItemPriority)(line);
+  return pipe(duplicateItemFinder, scoreItemPriority)(line);
 }
 
 export const calculateTotalScore = (lines: Array<string>) => {
-  return pipe(map(calculateScore), sum)(lines)
+  return pipe(
+    map(calculateScore),
+    sum
+  )(lines)
 }
 
+export const badgeScoreFinder = (lines: Array<string>) => {
+  return pipe(
+    map(Array.from),
+    chunk(3),
+    map(findDupsFromList),
+    map(scoreItemPriority),
+    sum
+  )(lines)
+}
 
 if (require.main === module) {
   readAocInput(__dirname, "input1.txt", (lines: Array<string>) => {
     console.log(`Total score for part 1 is: ${calculateTotalScore(lines)}`)
+  })
+
+  readAocInput(__dirname, "input1.txt", (lines: Array<string>) => {
+    console.log(`Total score for part 2 is: ${badgeScoreFinder(lines)}`)
   })
 }
