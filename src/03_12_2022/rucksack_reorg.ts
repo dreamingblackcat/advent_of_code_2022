@@ -62,13 +62,11 @@ export const calculateScore = (line: string): number => {
 }
 
 export const calculateTotalScore = (lines: Array<string>) => {
-  //return sum(map(calculateScore, lines))
   return pipe(map(calculateScore), sum)(lines)
 }
 
 
 if (require.main === module) {
-  console.log("Running me directly.")
   readAocInput(__dirname, "input1.txt", (lines: Array<string>) => {
     console.log(`Total score for part 1 is: ${calculateTotalScore(lines)}`)
   })
