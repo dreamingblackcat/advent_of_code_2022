@@ -21,6 +21,11 @@ export type State = {
   [key: number]: string[],
 };
 
+export enum MovingStrategy {
+  ONE_BY_ONE = 1,
+  MUTLIPLE_AT_ONCE = 2
+}
+
 export const parseState = (stateLines: string[]): State => {
   // TODO: implement a limited parser here later.
   let stacksCount = pipe(
@@ -69,14 +74,19 @@ const parseInstructions = (instructionLines: string[]): MoveInstruction[] => {
 }
 
 
-export const moveCrate = (state: State, instruction: MoveInstruction): State => {
+export const moveCrate = (strategy: MovingStrategy = MovingStrategy.ONE_BY_ONE, state: State, instruction: MoveInstruction): State => {
   let fromList = state[instruction.from];
   let toList = state[instruction.to];
+
+  let cratesToMove = takeRight(instruction.crates)(fromList);
+  if (strategy == MovingStrategy.ONE_BY_ONE) {
+    cratesToMove = reverse(cratesToMove);
+  }
 
   let newState = {
     ...state,
     [instruction.from]: take(fromList.length - instruction.crates)(fromList),
-    [instruction.to]: toList.concat(reverse(takeRight(instruction.crates)(fromList))),
+    [instruction.to]: toList.concat(cratesToMove),
   }
 
   return newState;
@@ -91,8 +101,8 @@ const debug = (func: (...args: any[]) => any) => {
   }
 }
 
-export const runInstructions = (state: State, instructions: MoveInstruction[]): State => {
-  return reduce(moveCrate)(state)(instructions);
+export const runInstructions = (strategy: MovingStrategy = MovingStrategy.ONE_BY_ONE, state: State, instructions: MoveInstruction[]): State => {
+  return reduce(moveCrate.bind(null, strategy))(state)(instructions);
 }
 
 //[N]         [C]     [Z]
@@ -117,9 +127,11 @@ if (require.main === module) {
     console.log(ins)
     console.log(initialState)
 
-    const message = Object.values(runInstructions(initialState, ins)).map(ary => last(ary)).join("")
+    const message1 = Object.values(runInstructions(MovingStrategy.ONE_BY_ONE, initialState, ins)).map(ary => last(ary)).join("")
+    const message2 = Object.values(runInstructions(MovingStrategy.MUTLIPLE_AT_ONCE, initialState, ins)).map(ary => last(ary)).join("")
 
-    console.log(`Part 1: Message for the elves: ${message}`)
+    console.log(`Part 1: Message for the elves: ${message1}`)
+    console.log(`Part 1: Message for the elves: ${message2}`)
   })
 
 }
